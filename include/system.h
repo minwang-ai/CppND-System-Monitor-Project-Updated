@@ -23,13 +23,13 @@ class System {
   Processor cpu_{};
   std::vector<Process> processes_{};
 
+  // Caching is appropriate because these values do not change during the runtime.
   std::string kernel_{};
   bool kernel_cached_{false};
-
   std::string os_{};
   bool os_cached_{false};
 
-  long uptime_{0};
+  long uptime_{0}; // just for debugging, delete later
 
 };
 

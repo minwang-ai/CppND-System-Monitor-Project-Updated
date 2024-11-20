@@ -61,6 +61,7 @@ std::string LinuxParser::Kernel() {
     std::istringstream linestream(line);
     std::string os, version, kernel;
     linestream >> os >> version >> kernel;
+    return kernel;
   }
   return "";
 }
@@ -121,7 +122,22 @@ vector<std::string> LinuxParser::CpuUtilization() { return {}; }
 int LinuxParser::TotalProcesses() { return 0; }
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() {
+  std::ifstream file_stream(kProcDirectory + kStatFilename);
+  if (file_stream){
+    std::string line;
+    while(getline(file_stream,line)){
+      std::istringstream linestream(line);
+      std::string key;
+      int value;
+      linestream >> key >> value;
+      if (key == "procs_running"){
+        return value;
+      }
+    }
+  }
+  return 0;
+}
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
