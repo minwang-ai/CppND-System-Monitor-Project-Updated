@@ -10,18 +10,28 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-// DONE: An example of how to read data from the filesystem
-string LinuxParser::OperatingSystem() {
-  string line;
-  string key;
-  string value;
+
+/**
+ * @brief Retrieves the operating system name from the OS release file.
+ *
+ * This function reads the operating system information from the file specified
+ * by the kOSPath constant. It looks for the "PRETTY_NAME" key in the file,
+ * which typically contains the human-readable name of the operating system.
+ *
+ * @return std::string: A string containing the operating system name. If the file cannot be
+ *         opened or the "PRETTY_NAME" key is not found, an empty string is returned.
+ */
+std::string LinuxParser::OperatingSystem() {
   std::ifstream filestream(kOSPath);
-  if (filestream.is_open()) {
+  if (filestream) {
+    std::string line;
     while (std::getline(filestream, line)) {
       std::replace(line.begin(), line.end(), ' ', '_');
       std::replace(line.begin(), line.end(), '=', ' ');
       std::replace(line.begin(), line.end(), '"', ' ');
       std::istringstream linestream(line);
+      std::string key;
+      std::string value;
       while (linestream >> key >> value) {
         if (key == "PRETTY_NAME") {
           std::replace(value.begin(), value.end(), '_', ' ');
@@ -30,20 +40,29 @@ string LinuxParser::OperatingSystem() {
       }
     }
   }
-  return value;
+  return "";
 }
 
-// DONE: An example of how to read data from the filesystem
-string LinuxParser::Kernel() {
-  string os, version, kernel;
-  string line;
+
+/**
+ * @brief Retrieves the kernel version of the operating system.
+ *
+ * This function reads the kernel version from the file located at
+ * /proc/version and returns it as a string. It extracts the kernel
+ * version by parsing the first line of the file.
+ *
+ * @return std::string: A string representing the kernel version.
+ */
+std::string LinuxParser::Kernel() {
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
+    std::string line;
     std::getline(stream, line);
     std::istringstream linestream(line);
+    std::string os, version, kernel;
     linestream >> os >> version >> kernel;
   }
-  return kernel;
+  return "";
 }
 
 // BONUS: Update this to use std::filesystem
@@ -55,7 +74,7 @@ vector<int> LinuxParser::Pids() {
     // Is this a directory?
     if (file->d_type == DT_DIR) {
       // Is every character of the name a digit?
-      string filename(file->d_name);
+      std::string filename(file->d_name);
       if (std::all_of(filename.begin(), filename.end(), isdigit)) {
         int pid = stoi(filename);
         pids.push_back(pid);
@@ -70,7 +89,17 @@ vector<int> LinuxParser::Pids() {
 float LinuxParser::MemoryUtilization() { return 0.0; }
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+long LinuxParser::UpTime() { 
+  long uptime{0};
+  std::ifstream file_stream(kProcDirectory + kUptimeFilename);
+  if (file_stream){
+    std::string line;
+    std::getline(file_stream, line);
+    std::istringstream linestream(line);
+    linestream >> uptime;
+  }
+  return uptime; 
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
@@ -86,7 +115,7 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<std::string> LinuxParser::CpuUtilization() { return {}; }
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { return 0; }
@@ -96,19 +125,19 @@ int LinuxParser::RunningProcesses() { return 0; }
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+std::string LinuxParser::Command(int pid[[maybe_unused]]) { return std::string(); }
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+std::string LinuxParser::Ram(int pid[[maybe_unused]]) { return std::string(); }
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+std::string LinuxParser::Uid(int pid[[maybe_unused]]) { return std::string(); }
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+std::string LinuxParser::User(int pid[[maybe_unused]]) { return std::string(); }
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
