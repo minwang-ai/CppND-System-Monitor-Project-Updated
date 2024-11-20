@@ -1,15 +1,30 @@
 # CppND-System-Monitor
 
-Starter code for System Monitor Project in the Object Oriented Programming Course of the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). 
-
-Follow along with the classroom lesson to complete the project!
+My solution for System Monitor Project in the Object Oriented Programming Course of the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). 
 
 ![System Monitor](images/monitor.png)
 
-## Udacity Linux Workspace
-[Udacity](https://www.udacity.com/) provides a browser-based Linux [Workspace](https://engineering.udacity.com/creating-a-gpu-enhanced-virtual-desktop-for-udacity-497bdd91a505) for students. 
+## Project Overvew
 
-You are welcome to develop this project on your local machine, and you are not required to use the Udacity Workspace. However, the Workspace provides a convenient and consistent Linux development environment we encourage you to try.
+- **`System` Class**: Represents the overall system and provides information about the system's state, such as the list of processes, memory utilization, and CPU utilization.
+- **`Process` Class**: Represents an individual process running on the system and provides information about that process, such as its ID, CPU usage, memory usage, and command.
+- **`Processor` Class**: Represents the CPU and provides information about its utilization.
+- **`LinuxParser` Namespace**: Contains functions that parse information from the Linux filesystem (primarily from the `/proc` directory) to provide data needed by the `System`, `Process`, and `Processor` classes.
+
+### Responsibilities and Relationships
+
+1. **`System` Class**:
+   - Uses functions from the `LinuxParser` namespace to gather system-wide information.
+   - Maintains a list of `Process` objects, representing all running processes.
+   - Contains a `Processor` object to represent the CPU.
+
+2. **`Process` Class**:
+   - Uses functions from the `LinuxParser` namespace to gather information specific to a process, such as its CPU and memory usage.
+   - Each `Process` object corresponds to a single process on the system.
+
+3. **`Processor` Class**:
+   - Uses functions from the `LinuxParser` namespace to gather information about CPU utilization.
+   
 
 ## ncurses
 [ncurses](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
@@ -27,7 +42,7 @@ This project uses [Make](https://www.gnu.org/software/make/). The Makefile has f
 
 ## Instructions
 
-1. Clone the project repository: `git clone https://github.com/udacity/CppND-System-Monitor-Project-Updated.git`
+1. Clone the project repository: `git clone <project_url>`
 
 2. Build the project: `make build`
 
