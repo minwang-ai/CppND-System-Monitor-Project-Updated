@@ -31,7 +31,9 @@ std::string System::Kernel() {
 }
 
 // TODO: Return the system's memory utilization
-float System::MemoryUtilization() { return 0.0; }
+float System::MemoryUtilization() {
+    return LinuxParser::MemoryUtilization();
+}
 
 // TODO: Return the operating system name
 std::string System::OperatingSystem() { 
@@ -55,8 +57,4 @@ int System::TotalProcesses() {
 // TODO: Return the number of seconds since the system started running
 long int System::UpTime() { 
     return LinuxParser::UpTime(); 
-    //just for debugging, delete later
-    // uptime_ = LinuxParser::UpTime(); 
-    //std::cout << "System uptime: " << uptime_ << std::endl;
-    //return uptime_;
 }

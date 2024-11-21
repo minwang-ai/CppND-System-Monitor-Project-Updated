@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "linux_parser.h"
 
@@ -39,7 +40,7 @@ std::string LinuxParser::OperatingSystem() {
         }
       }
     }
-  }
+  } 
   return "";
 }
 
@@ -87,19 +88,37 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization() {
+  std::ifstream file_stream(kProcDirectory + kMeminfoFilename);
+  if(file_stream){
+    std::string line;
+    std::unordered_map<std::string, long> meminfo;
+    std::string key; 
+    long value;
+    while(getline(file_stream, line)){
+      std::istringstream linestream(line);
+      linestream >> key >> value;
+      key.pop_back(); // remove the colon at the end of the key
+      meminfo[key] = value;
+    }
+    long total_used_memory = meminfo["MemTotal"] - meminfo["MemFree"];
+    return static_cast<float>(total_used_memory) / meminfo["MemTotal"];
+  }
+  return 0.0;
+}
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { 
-  long uptime{0};
   std::ifstream file_stream(kProcDirectory + kUptimeFilename);
   if (file_stream){
     std::string line;
+    long uptime;
     std::getline(file_stream, line);
     std::istringstream linestream(line);
     linestream >> uptime;
-  }
-  return uptime; 
+    return uptime;
+  } 
+  return 0;
 }
 
 // TODO: Read and return the number of jiffies for the system
