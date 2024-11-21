@@ -98,10 +98,12 @@ float LinuxParser::MemoryUtilization() {
     while(getline(file_stream, line)){
       std::istringstream linestream(line);
       linestream >> key >> value;
-      key.pop_back(); // remove the colon at the end of the key
-      meminfo[key] = value;
+      if (key == "MemTotal:" || key == "MemAvailable:") {
+        key.pop_back(); // remove the colon at the end of the key
+        meminfo[key] = value;
+      }
     }
-    long total_used_memory = meminfo["MemTotal"] - meminfo["MemFree"];
+    long total_used_memory = meminfo["MemTotal"] - meminfo["MemAvailable"];
     return static_cast<float>(total_used_memory) / meminfo["MemTotal"];
   }
   return 0.0;
