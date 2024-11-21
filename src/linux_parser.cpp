@@ -87,7 +87,16 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
+
+/**
+ * @brief Calculates the memory utilization of the system.
+ *
+ * This function reads the memory information from the /proc/meminfo file,
+ * extracts the total memory and available memory, and calculates the memory
+ * utilization as the ratio of used memory to total memory.
+ *
+ * @return float: The memory utilization as a float value between 0 and 1.
+ */
 float LinuxParser::MemoryUtilization() {
   std::ifstream file_stream(kProcDirectory + kMeminfoFilename);
   if(file_stream){
@@ -109,7 +118,15 @@ float LinuxParser::MemoryUtilization() {
   return 0.0;
 }
 
-// TODO: Read and return the system uptime
+
+/**
+ * @brief Retrieves the system uptime.
+ *
+ * This function reads the system uptime from the /proc/uptime file and returns it.
+ * The uptime is the amount of time (in seconds) that the system has been running since it was started.
+ *
+ * @return long: The system uptime in seconds. If the file cannot be read, returns 0.
+ */
 long LinuxParser::UpTime() { 
   std::ifstream file_stream(kProcDirectory + kUptimeFilename);
   if (file_stream){
@@ -139,7 +156,16 @@ long LinuxParser::IdleJiffies() { return 0; }
 // TODO: Read and return CPU utilization
 vector<std::string> LinuxParser::CpuUtilization() { return {}; }
 
-// TODO: Read and return the total number of processes
+/**
+ * @brief Reads and returns the total number of processes from the /proc/stat file.
+ *
+ * This function opens the /proc/stat file, reads its contents line by line,
+ * and searches for the line that starts with the keyword "processes".
+ * When it finds this line, it extracts and returns the integer value that follows the keyword.
+ * If the file cannot be opened or the keyword is not found, the function returns 0.
+ *
+ * @return int: The total number of processes, or 0 if the information cannot be retrieved.
+ */
 int LinuxParser::TotalProcesses() {
   std::ifstream file_stream(kProcDirectory + kStatFilename);
   if(file_stream){
@@ -157,7 +183,14 @@ int LinuxParser::TotalProcesses() {
   return 0;
 }
 
-// TODO: Read and return the number of running processes
+/**
+ * @brief Retrieves the number of running processes from the /proc/stat file.
+ *
+ * This function reads the /proc/stat file to find the line that starts with "procs_running"
+ * and extracts the corresponding value, which represents the number of currently running processes.
+ *
+ * @return int: The number of running processes. Returns 0 if the file cannot be read or the key is not found.
+ */
 int LinuxParser::RunningProcesses() {
   std::ifstream file_stream(kProcDirectory + kStatFilename);
   if (file_stream){
