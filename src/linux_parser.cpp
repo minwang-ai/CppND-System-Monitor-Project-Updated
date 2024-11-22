@@ -8,7 +8,6 @@
 #include "linux_parser.h"
 
 using std::stof;
-using std::string;
 using std::to_string;
 using std::vector;
 
@@ -90,13 +89,16 @@ vector<int> LinuxParser::Pids() {
 
 
 /**
- * @brief Calculates the memory utilization of the system.
- *
- * This function reads the memory information from the /proc/meminfo file,
- * extracts the total memory and available memory, and calculates the memory
- * utilization as the ratio of used memory to total memory.
- *
- * @return float: The memory utilization as a float value between 0 and 1.
+ * @brief Calculate the memory utilization of the system.
+ * 
+ * This function reads memory information from the /proc/meminfo file and calculates the memory utilization.
+ * The memory utilization is calculated as the total used memory divided by the total memory.
+ * The calculation formula follows the free command description of Ubuntu 20.04 LTS (https://manpages.ubuntu.com/manpages/focal/man1/free.1.html)
+ * because the codespace of the project is Ubuntu 20.04 LTS.
+ * 
+ * For Ubuntu 23.10 and later, the formula is simplified as total - available.
+ * 
+ * @return float The memory utilization as a fraction (0.0 to 1.0).
  */
 float LinuxParser::MemoryUtilization() {
   std::ifstream file_stream(kProcDirectory + kMeminfoFilename);
@@ -108,13 +110,16 @@ float LinuxParser::MemoryUtilization() {
     while(getline(file_stream, line)){
       std::istringstream linestream(line);
       linestream >> key >> value;
-      if (key == "MemTotal:" || key == "MemAvailable:") {
         key.pop_back(); // remove the colon at the end of the key
         meminfo[key] = value;
       }
-    }
-    long total_used_memory = meminfo["MemTotal"] - meminfo["MemAvailable"];
-    return static_cast<float>(total_used_memory) / meminfo["MemTotal"];
+    
+      long total = meminfo["MemTotal"] + meminfo["SwapTotal"];
+      long free = meminfo["MemFree"] + meminfo["SwapFree"];
+      long buffers = meminfo["Buffers"];
+      long cache = meminfo["Cached"] + meminfo["Slab"];
+      long total_used_memory = total - free - buffers - cache;
+      return static_cast<float>(total_used_memory) / total;
   }
   return 0.0;
 }
@@ -151,7 +156,7 @@ long LinuxParser::UpTime() {
  * @return long: The total number of jiffies (active + idle) for the system.
  */
 long LinuxParser::Jiffies() { 
-   vector<string> cpu_stats = CpuUtilization();
+   vector<std::string> cpu_stats = CpuUtilization();
 
   long user = std::stol(cpu_stats[LinuxParser::CPUStates::kUser_]);
   long nice = std::stol(cpu_stats[LinuxParser::CPUStates::kNice_]);
