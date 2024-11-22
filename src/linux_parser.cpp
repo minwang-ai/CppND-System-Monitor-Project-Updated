@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 
+
 #include "linux_parser.h"
 
 using std::stof;
@@ -140,21 +141,105 @@ long LinuxParser::UpTime() {
   return 0;
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+
+/**
+ * @brief Calculates the total number of jiffies (time units) for the system.
+ *
+ * This function retrieves CPU utilization statistics and calculates the total
+ * number of jiffies by summing up the active and idle jiffies.
+ *
+ * @return long: The total number of jiffies (active + idle) for the system.
+ */
+long LinuxParser::Jiffies() { 
+   vector<string> cpu_stats = CpuUtilization();
+
+  long user = std::stol(cpu_stats[LinuxParser::CPUStates::kUser_]);
+  long nice = std::stol(cpu_stats[LinuxParser::CPUStates::kNice_]);
+  long system = std::stol(cpu_stats[LinuxParser::CPUStates::kSystem_]);
+  long idle = std::stol(cpu_stats[LinuxParser::CPUStates::kIdle_]);
+  long iowait = std::stol(cpu_stats[LinuxParser::CPUStates::kIOwait_]);
+  long irq = std::stol(cpu_stats[LinuxParser::CPUStates::kIRQ_]);
+  long softirq = std::stol(cpu_stats[LinuxParser::CPUStates::kSoftIRQ_]);
+  long steal = std::stol(cpu_stats[LinuxParser::CPUStates::kSteal_]);
+  // Guest time is already accounted in usertime, so we don't need to add it
+  long active_jiffies = user + nice + system + irq + softirq + steal;
+  long idle_jiffies = idle + iowait;
+
+  return active_jiffies + idle_jiffies;
+}
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
 
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
 
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+/**
+ * @brief Calculates the total number of active jiffies for the system.
+ *
+ * This function retrieves CPU utilization statistics and sums up the jiffies
+ * spent in user mode, nice mode, system mode, IRQ, soft IRQ, and steal time.
+ * Note that guest time is already included in user time and is not added separately.
+ *
+ * @return long: The total number of active jiffies.
+ */
+long LinuxParser::ActiveJiffies() {
+  vector<std::string> cpu_stats = LinuxParser::CpuUtilization();
 
-// TODO: Read and return CPU utilization
-vector<std::string> LinuxParser::CpuUtilization() { return {}; }
+  long user = std::stol(cpu_stats[LinuxParser::CPUStates::kUser_]);
+  long nice = std::stol(cpu_stats[LinuxParser::CPUStates::kNice_]);
+  long system = std::stol(cpu_stats[LinuxParser::CPUStates::kSystem_]);
+  long irq = std::stol(cpu_stats[LinuxParser::CPUStates::kIRQ_]);
+  long softirq = std::stol(cpu_stats[LinuxParser::CPUStates::kSoftIRQ_]);
+  long steal = std::stol(cpu_stats[LinuxParser::CPUStates::kSteal_]);
+  // Guest time is already accounted in usertime, so we don't need to add it
+  return user + nice + system + irq + softirq + steal;
+}
+
+
+/**
+ * @brief Calculates the total number of idle jiffies for the system.
+ *
+ * This function retrieves the CPU utilization statistics and extracts the
+ * idle and iowait jiffies, then returns their sum. Idle jiffies represent
+ * the time the CPU has spent doing nothing, while iowait jiffies represent
+ * the time the CPU has been waiting for I/O operations to complete.
+ *
+ * @return long: The total number of idle jiffies (idle + iowait).
+ */
+long LinuxParser::IdleJiffies() {
+  vector<std::string> cpu_stats = LinuxParser::CpuUtilization();
+  long idle = std::stol(cpu_stats[LinuxParser::CPUStates::kIdle_]);
+  long iowait = std::stol(cpu_stats[LinuxParser::CPUStates::kIOwait_]);
+  return idle + iowait;
+}
+
+
+/**
+ * @brief Retrieves the CPU utilization statistics from the /proc/stat file.
+ *
+ * This function reads the first line of the /proc/stat file, which contains
+ * the aggregate CPU statistics. It extracts the values following the "cpu" prefix
+ * and returns them as a vector of strings. Each value represents a different
+ * aspect of CPU time (e.g., user time, system time, idle time, etc.).
+ *
+ * @return std::vector<std::string>: A vector containing the CPU utilization statistics.
+ */
+vector<std::string> LinuxParser::CpuUtilization() {
+  std::vector<std::string> cpu_stats;
+  std::ifstream file_stream(kProcDirectory + kStatFilename);
+  if(file_stream){
+    std::string line;
+    std::getline(file_stream, line);
+    std::istringstream linestream(line);
+    std::string cpu_prefix;
+    linestream >> cpu_prefix; // read the first token "cpu" and discard it later
+    std::string value;
+    while(linestream >> value){
+      cpu_stats.push_back(value);
+    }
+  return cpu_stats;
+  }
+}
 
 /**
  * @brief Reads and returns the total number of processes from the /proc/stat file.
