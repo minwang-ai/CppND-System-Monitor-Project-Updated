@@ -25,13 +25,20 @@ float Processor::Utilization() {
     long delta_active_jiffies = active_jiffies - prev_active_jiffies_;
     long delta_total_jiffies = total_jiffies - prev_total_jiffies_;
 
-    // If delta_total_jiffies is zero, wait for a short period and re-evaluate
-    if (delta_total_jiffies == 0) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // Wait for 100 milliseconds
-    active_jiffies = LinuxParser::ActiveJiffies();
-    total_jiffies = LinuxParser::Jiffies();
-    delta_active_jiffies = active_jiffies - prev_active_jiffies_;
-    delta_total_jiffies = total_jiffies - prev_total_jiffies_;
+    // Avoid division by zero
+    // Define a maximun number of retries and a sleep duration
+    const int max_retries{5};
+    const std::chrono::milliseconds sleep_duration{100};
+    //retry until delta_total_jiffies is not zero or max_retries is reached
+    int retries{0};
+    if (delta_total_jiffies == 0 && retries < max_retries) {
+        // Wait for a short period and re-evaluate the jiffies
+        std::this_thread::sleep_for(sleep_duration);
+        active_jiffies = LinuxParser::ActiveJiffies();
+        total_jiffies = LinuxParser::Jiffies();
+        delta_active_jiffies = active_jiffies - prev_active_jiffies_;
+        delta_total_jiffies = total_jiffies - prev_total_jiffies_;
+        retries++;
     }
 
     // Update the previous values with the current values
