@@ -12,14 +12,20 @@
 
 using std::set;
 using std::size_t;
-using std::string;
-using std::vector;
+
 
 // Return the system's CPU
 Processor& System::Cpu() { return cpu_; }
 
 // Return a vector container composed of the system's processses
-vector<Process>& System::Processes() { return processes_; }
+std::vector<Process>& System::Processes() {
+    std::vector<int> pids = LinuxParser::Pids();
+    processes_.clear(); // Clear the existing processes before updating to ensure it is up-to-date
+    for (int pid : pids){
+        processes_.emplace_back(pid); // Construct a Process object in place for each PID
+    } 
+    return processes_; 
+}
 
 // Return the system's kernel identifier (string)
 std::string System::Kernel() { 

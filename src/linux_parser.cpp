@@ -68,6 +68,16 @@ std::string LinuxParser::Kernel() {
 }
 
 // BONUS: Update this to use std::filesystem
+/**
+ * @brief Retrieves a list of process IDs (PIDs) from the /proc directory.
+ *
+ * This function opens the /proc directory and iterates through its entries.
+ * It checks each entry to determine if it is a directory and if the directory
+ * name consists entirely of digits. If both conditions are met, the directory
+ * name is converted to an integer and added to the list of PIDs.
+ *
+ * @return A vector of integers representing the process IDs.
+ */
 vector<int> LinuxParser::Pids() {
   vector<int> pids;
   DIR* directory = opendir(kProcDirectory.c_str());
@@ -306,13 +316,59 @@ std::string LinuxParser::Command(int pid[[maybe_unused]]) { return std::string()
 // REMOVE: [[maybe_unused]] once you define the function
 std::string LinuxParser::Ram(int pid[[maybe_unused]]) { return std::string(); }
 
-// TODO: Read and return the user ID associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-std::string LinuxParser::Uid(int pid[[maybe_unused]]) { return std::string(); }
+
+/**
+ * @brief Retrieves the UID of a process given its PID.
+ *
+ * This function reads the /proc/[pid]/status file to find the UID of the process.
+ * It opens the file, reads it line by line, and searches for the line that starts
+ * with "Uid:". Once found, it extracts and returns the UID value (the first integer).
+ *
+ * @param pid int: The process ID for which the UID is to be retrieved.
+ * @return std::string: The UID of the process as a string. If the UID cannot be found, an empty string is returned.
+ */
+std::string LinuxParser::Uid(int pid) { 
+  std::ifstream file_stream(kProcDirectory +std::to_string(pid) + kStatusFilename);
+  if(file_stream){
+    std::string line;
+    while(std::getline(file_stream, line)){
+      std::istringstream linestream(line);
+      std::string key;
+      std::string value;
+      linestream >> key >> value;
+      if(key == "Uid:"){
+        return value;
+      }
+    }
+  }
+  return ""; 
+}
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-std::string LinuxParser::User(int pid[[maybe_unused]]) { return std::string(); }
+std::string LinuxParser::User(int pid) { 
+  std::string uid = LinuxParser::Uid(pid);
+  std::ifstream file_stream(kPasswordPath);
+  if(file_stream){
+    std::string line;
+    while(std::getline(file_stream, line)){
+      std::istringstream linestream(line);
+      char delimiter; // delimiter between fields in the password file
+      std::string user_name, x, file_uid;
+       // Read the username
+      std::getline(linestream, user_name, ':');
+      // Read the 'x' (password placeholder)
+      std::getline(linestream, x, ':');
+      // Read the UID
+      std::getline(linestream, file_uid, ':');
+      // Ignore the rest of the line
+      if(file_uid == uid){
+        return user_name;
+      }
+    }
+  }  
+  return ""; 
+}
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
