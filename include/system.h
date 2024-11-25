@@ -24,11 +24,7 @@ class System {
 
   // Caching is appropriate because these values do not change during the runtime.
   std::string kernel_{};
-  bool kernel_cached_{false};
   std::string os_{};
-  bool os_cached_{false};
-
-
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>  // For std::sort
 
 #include "process.h"
 #include "processor.h"
@@ -24,14 +25,17 @@ std::vector<Process>& System::Processes() {
     for (int pid : pids){
         processes_.emplace_back(pid); // Construct a Process object in place for each PID
     } 
+    // Sort the processes in descending order of CPU utilization)
+    // By default, std::sort uses the less-than operator (<) to compare elements. 
+    // based on the overloaded < operator in the Process class
+    std::sort(processes_.begin(), processes_.end(), std::greater<Process>());
     return processes_; 
 }
 
 // Return the system's kernel identifier (string)
 std::string System::Kernel() { 
-    if (!kernel_cached_) {
+    if (kernel_.empty()) {
         kernel_ = LinuxParser::Kernel();
-        kernel_cached_ = true;
     }
     return kernel_; 
 }
@@ -43,9 +47,8 @@ float System::MemoryUtilization() {
 
 // Return the system's operating system name (string)
 std::string System::OperatingSystem() { 
-    if (!os_cached_) {
+    if (os_.empty()) {
         os_ = LinuxParser::OperatingSystem();
-        os_cached_ = true;
     }
     return os_; 
 }

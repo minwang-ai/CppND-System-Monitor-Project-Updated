@@ -26,12 +26,6 @@ My solution for System Monitor Project in the Object Oriented Programming Course
    - Uses functions from the `LinuxParser` namespace to gather information about CPU utilization.
    
 
-## ncurses
-[ncurses](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
-
-Within the Udacity Workspace, `.student_bashrc` automatically installs ncurses every time you launch the Workspace.
-
-If you are not using the Workspace, install ncurses within your own Linux environment: `sudo apt install libncurses5-dev libncursesw5-dev`
 
 ## Make
 This project uses [Make](https://www.gnu.org/software/make/). The Makefile has four targets:
@@ -44,13 +38,10 @@ This project uses [Make](https://www.gnu.org/software/make/). The Makefile has f
 
 1. Clone the project repository: `git clone <project_url>`
 
-2. Build the project: `make build`
+2. Install ncurses within your own Linux environment: `sudo apt install libncurses5-dev libncursesw5-dev`. [ncurses](https://www.gnu.org/software/ncurses/) is a library that facilitates text-based graphical output in the terminal. This project relies on ncurses for display output.
 
-3. Run the resulting executable: `./build/monitor`
+3. Build the project: `make build`
+
+4. Run the resulting executable: `./build/monitor`
 ![Starting System Monitor](images/starting_monitor.png)
 
-4. Follow along with the lesson.
-
-5. Implement the `System`, `Process`, and `Processor` classes, as well as functions within the `LinuxParser` namespace.
-
-6. Submit!

@@ -336,13 +336,53 @@ int LinuxParser::RunningProcesses() {
   return 0;
 }
 
-// TODO: Read and return the command associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-std::string LinuxParser::Command(int pid[[maybe_unused]]) { return std::string(); }
+
+/**
+ * @brief Retrieves the command that was used to start a process.
+ *
+ * This function reads the command line information for a given process ID (pid)
+ * from the /proc filesystem and returns it as a string. If the file cannot be
+ * opened or read, an empty string is returned.
+ *
+ * @param pid int : The process ID for which to retrieve the command line information.
+ * @return std::string: A tring containing the command line used to start the process, or
+ *         an empty string if the information cannot be retrieved.
+ */
+std::string LinuxParser::Command(int pid) {
+  std::ifstream file_stream(kProcDirectory + std::to_string(pid) + kCmdlineFilename);
+  if (file_stream) {
+    std::string line;
+    std::getline(file_stream, line, '\0');  // Read until the first null character
+    std::string command = line;
+    while (std::getline(file_stream, line, '\0')) {
+      command += " " + line; // replace the null character with a space
+    }
+    // Replace newline characters with spaces
+    std::replace(command.begin(), command.end(), '\n', ' ');
+    return command;
+  }
+  return ""; 
+}
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-std::string LinuxParser::Ram(int pid[[maybe_unused]]) { return std::string(); }
+std::string LinuxParser::Ram(int pid) {
+  std::ifstream file_stream(kProcDirectory + std::to_string(pid) + kStatusFilename);
+  if(file_stream){
+    std::string line;
+    std::string key;
+    long value;
+    while(std::getline(file_stream, line)){
+      std::istringstream linestream(line);
+      linestream >> key >> value;
+      if (key == "VmSize:"){
+        long ram = value / 1024; // convert from KB to MB
+        return std::to_string(ram);
+      }
+    }
+  }
+   return "0"; 
+}
 
 
 /**
@@ -407,13 +447,15 @@ std::string LinuxParser::User(int pid) {
 }
 
 
+
 /**
- * @brief Retrieves the uptime of a process in seconds.
+ * @brief Get the uptime of a process in seconds.
  *
  * This function reads the /proc/[pid]/stat file to extract the process start time
- * (in clock ticks) and converts it to seconds.
+ * and calculates the uptime of the process by subtracting the start time from the
+ * system uptime.
  *
- * @param pid int: The process ID for which the uptime is to be retrieved.
+ * @param pid int: The process ID for which to get the uptime.
  * @return long: The uptime of the process in seconds. If the file cannot be opened, returns 0.
  */
 long LinuxParser::UpTime(int pid) { 
@@ -428,7 +470,9 @@ long LinuxParser::UpTime(int pid) {
       linestream >> value;
       if (i == 22) starttime = std::stol(value);
     }
-    return LinuxParser::UpTime() - starttime / sysconf(_SC_CLK_TCK); // convert clock ticks to seconds using sec = jiffies / Hertz
+    // no matter the start time is expressed either in jiffies (before linux 2.6) or clock ticks (after linux 2.6), we simply convert it to seconds
+    starttime /= sysconf(_SC_CLK_TCK); // convert clock ticks to seconds by dividing by the frequency (Hertz).
+    return LinuxParser::UpTime() - starttime; // subtract the process start time from the system uptime to get the process uptime
   }
   return 0; 
 }
