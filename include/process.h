@@ -23,6 +23,9 @@ class Process {
  private:
     int pid_;
     std::string user_;
+    // Store the previous values for active and total jiffies for calculating the difference
+    long prev_active_jiffies_{0};
+    long prev_total_jiffies_{0};
 };
 
 #endif

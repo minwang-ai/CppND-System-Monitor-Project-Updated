@@ -183,9 +183,36 @@ long LinuxParser::Jiffies() {
   return active_jiffies + idle_jiffies;
 }
 
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+
+/**
+ * @brief Calculates the active jiffies for a given process.
+ *
+ * This function reads the /proc/[pid]/stat file to extract the values of utime, stime, cutime, and cstime,
+ * which represent the amount of time the process has spent in user mode, kernel mode, and the respective
+ * times for its waited-for children. It sums these values to return the total active jiffies for the process.
+ *
+ * @param pid int: The process ID for which to calculate active jiffies.
+ * @return long: The total active jiffies for the process, or 0 if the file cannot be read.
+ */
+long LinuxParser::ActiveJiffies(int pid) { 
+  std::ifstream file_stream(kProcDirectory + std::to_string(pid) + kStatFilename);
+  if(file_stream){
+    std::string line;
+    std::getline(file_stream, line);
+    std::istringstream linestream(line);
+    std::string value;
+    long utime{0}, stime{0}, cutime{0}, cstime{0};
+    for (int i = 1; i <= 22; i++){
+      linestream >> value;
+      if (i == 14) utime = std::stol(value);
+      if (i == 15) stime = std::stol(value);
+      if (i == 16) cutime = std::stol(value);
+      if (i == 17) cstime = std::stol(value);
+    }
+    return utime + stime + cutime + cstime;
+  }
+  return 0; 
+}
 
 
 /**
@@ -344,8 +371,17 @@ std::string LinuxParser::Uid(int pid) {
   return ""; 
 }
 
-// TODO: Read and return the user associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
+
+/**
+ * @brief Retrieves the username associated with a given process ID (PID).
+ *
+ * This function reads the UID of the process from the /proc filesystem and then
+ * looks up the corresponding username from the /etc/passwd file.
+ *
+ * @param pid int: The process ID for which to retrieve the username.
+ * @return std::string: The username associated with the given PID, or an empty string if the
+ *         username could not be found.
+ */
 std::string LinuxParser::User(int pid) { 
   std::string uid = LinuxParser::Uid(pid);
   std::ifstream file_stream(kPasswordPath);
@@ -370,6 +406,29 @@ std::string LinuxParser::User(int pid) {
   return ""; 
 }
 
-// TODO: Read and return the uptime of a process
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+
+/**
+ * @brief Retrieves the uptime of a process in seconds.
+ *
+ * This function reads the /proc/[pid]/stat file to extract the process start time
+ * (in clock ticks) and converts it to seconds.
+ *
+ * @param pid int: The process ID for which the uptime is to be retrieved.
+ * @return long: The uptime of the process in seconds. If the file cannot be opened, returns 0.
+ */
+long LinuxParser::UpTime(int pid) { 
+  std::ifstream file_stream(kProcDirectory + std::to_string(pid) + kStatFilename);
+  if (file_stream) {
+    std::string line;
+    std::getline(file_stream, line);
+    std::istringstream linestream(line);
+    std::string value;
+    long starttime;
+    for (int i = 1; i <= 22; ++i) {
+      linestream >> value;
+      if (i == 22) starttime = std::stol(value);
+    }
+    return starttime / sysconf(_SC_CLK_TCK); // convert clock ticks to seconds using sec = jiffies / Hertz
+  }
+  return 0; 
+}
