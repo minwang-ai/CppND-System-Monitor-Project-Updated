@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include <unistd.h> // for using sysconf
 
 #include "linux_parser.h"
 
@@ -279,8 +280,8 @@ vector<std::string> LinuxParser::CpuUtilization() {
     while(linestream >> value){
       cpu_stats.push_back(value);
     }
-  return cpu_stats;
   }
+  return cpu_stats;
 }
 
 /**
@@ -389,7 +390,6 @@ std::string LinuxParser::User(int pid) {
     std::string line;
     while(std::getline(file_stream, line)){
       std::istringstream linestream(line);
-      char delimiter; // delimiter between fields in the password file
       std::string user_name, x, file_uid;
        // Read the username
       std::getline(linestream, user_name, ':');
@@ -428,7 +428,7 @@ long LinuxParser::UpTime(int pid) {
       linestream >> value;
       if (i == 22) starttime = std::stol(value);
     }
-    return starttime / sysconf(_SC_CLK_TCK); // convert clock ticks to seconds using sec = jiffies / Hertz
+    return LinuxParser::UpTime() - starttime / sysconf(_SC_CLK_TCK); // convert clock ticks to seconds using sec = jiffies / Hertz
   }
   return 0; 
 }
